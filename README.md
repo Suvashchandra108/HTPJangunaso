@@ -78,6 +78,7 @@ src/
   locales/          ne.json, en.json, mai.json
   pages/            Citizen screens; pages/staff/ newsroom screens
   styles.css        HTP red design system (#E4010B from the logo)
+scripts/assets.mjs  Writes the logo and app icons (kept as text in brand-assets.json) into public/ before each build
 tests/e2e.py        23 end-to-end checks (Playwright)
 ```
 

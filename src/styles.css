@@ -1,16 +1,10 @@
+/* Mukta (Devanagari + Latin) is bundled from @fontsource/mukta in main.tsx — no request to Google. */
+
 /* ───────── HTP Janagunaso design system ─────────
    Brand red taken from the HTP Khabar logo (#E4010B).
    Red is reserved for primary actions and the current selection;
    ink and warm greys carry everything else so red keeps its weight. */
 
-@font-face { font-family: Mukta; font-weight: 400; font-display: swap; src: url(./assets/fonts/mukta-devanagari-400-normal.woff2) format('woff2'); unicode-range: U+0900-097F, U+1CD0-1CF9, U+200C-200D, U+20A8, U+20B9, U+25CC, U+A830-A839, U+A8E0-A8FF; }
-@font-face { font-family: Mukta; font-weight: 600; font-display: swap; src: url(./assets/fonts/mukta-devanagari-600-normal.woff2) format('woff2'); unicode-range: U+0900-097F, U+1CD0-1CF9, U+200C-200D, U+20A8, U+20B9, U+25CC, U+A830-A839, U+A8E0-A8FF; }
-@font-face { font-family: Mukta; font-weight: 700; font-display: swap; src: url(./assets/fonts/mukta-devanagari-700-normal.woff2) format('woff2'); unicode-range: U+0900-097F, U+1CD0-1CF9, U+200C-200D, U+20A8, U+20B9, U+25CC, U+A830-A839, U+A8E0-A8FF; }
-@font-face { font-family: Mukta; font-weight: 800; font-display: swap; src: url(./assets/fonts/mukta-devanagari-800-normal.woff2) format('woff2'); unicode-range: U+0900-097F, U+1CD0-1CF9, U+200C-200D, U+20A8, U+20B9, U+25CC, U+A830-A839, U+A8E0-A8FF; }
-@font-face { font-family: Mukta; font-weight: 400; font-display: swap; src: url(./assets/fonts/mukta-latin-400-normal.woff2) format('woff2'); }
-@font-face { font-family: Mukta; font-weight: 600; font-display: swap; src: url(./assets/fonts/mukta-latin-600-normal.woff2) format('woff2'); }
-@font-face { font-family: Mukta; font-weight: 700; font-display: swap; src: url(./assets/fonts/mukta-latin-700-normal.woff2) format('woff2'); }
-@font-face { font-family: Mukta; font-weight: 800; font-display: swap; src: url(./assets/fonts/mukta-latin-800-normal.woff2) format('woff2'); }
 
 :root {
   --red: #E4010B;          /* brand: primary actions, selection */
