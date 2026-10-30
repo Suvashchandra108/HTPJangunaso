@@ -1,0 +1,15 @@
+{
+  "name": "HTP खबर जनगुनासो",
+  "short_name": "जनगुनासो",
+  "description": "Report public-interest issues to HTP Khabar",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#FFFFFF",
+  "theme_color": "#E4010B",
+  "lang": "ne",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
