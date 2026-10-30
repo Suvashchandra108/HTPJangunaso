@@ -5,7 +5,7 @@ const CACHE = 'htp-janagunaso-v1';
 
 self.addEventListener('install', (e) => {
   self.skipWaiting();
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(['./', './index.html', './htp-logo.png', './manifest.webmanifest'])));
+  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(['./', './index.html', './icon.svg', './manifest.webmanifest'])));
 });
 
 self.addEventListener('activate', (e) => {

@@ -5,7 +5,8 @@ import { setLanguage } from '../i18n';
 import type { Lang } from '../lib/types';
 import { Back, Home, List, Plus, Search } from './Icons';
 
-const logoSrc = `${import.meta.env.BASE_URL}htp-logo.png`;
+// Official HTP Khabar logo, served from htpkhabar.com itself.
+const logoSrc = 'https://htpkhabar.com/wp-content/uploads/2021/12/cropped-cropped-Untitled-1.png';
 
 export function Logo({ height = 34 }: { height?: number }) {
   const { t } = useTranslation();

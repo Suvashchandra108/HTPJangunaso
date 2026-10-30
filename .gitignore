@@ -5,5 +5,4 @@ dist
 !.env.example
 .DS_Store
 
-# generated from scripts/brand-assets.json
-public/*.png
+package-lock.json
