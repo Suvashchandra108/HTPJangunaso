@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { LangSwitch, PageHead } from '../components/Layout';
-import { Alert, Check, Pin } from '../components/Icons';
+import { Check, Pin } from '../components/Icons';
+import { Bi, EmergencyPanel, SpeakButton } from '../components/Help';
 import { FileAttach, PhotoPicker, VoiceRecorder } from '../components/Media';
 import { useDraft } from '../lib/draft';
 import { submitReport } from '../lib/api';
@@ -16,6 +17,7 @@ export default function ReportPage() {
   const nav = useNavigate();
   const [params, setParams] = useSearchParams();
   const detailed = params.get('mode') === 'detailed';
+  const voiceFirst = params.get('voice') === '1';
   const { draft, update, clear, touched } = useDraft();
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
@@ -74,8 +76,9 @@ export default function ReportPage() {
         contact: draft.isAnonymous ? undefined : { name: draft.name || undefined, phone: draft.phone || undefined, email: draft.email || undefined },
         media: draft.media,
       });
+      const summary = { category: draft.category!, description: draft.description, urgency: draft.urgency, location: draft.location, hasVoice: !!voice, photoCount: photos.length };
       clear();
-      nav('/done', { replace: true, state: res });
+      nav('/done', { replace: true, state: { ...res, summary } });
     } catch {
       setFailed(true);
     } finally { setBusy(false); }
@@ -96,37 +99,34 @@ export default function ReportPage() {
         )}
 
         <div className="field">
-          <label htmlFor="what" className="label">{t('report.what')} <span className="req">*</span></label>
+          <div className="label-row"><label htmlFor="what" className="label"><Bi k="report.what" inline /> <span className="req">*</span></label><SpeakButton clip="what" /></div>
+          {voiceFirst && <VoiceRecorder value={voice} onChange={(m) => setKind('voice_description', m ? [m] : [])} />}
           <textarea id="what" className="textarea" rows={detailed ? 5 : 3} value={draft.description} placeholder={t('report.whatPh')}
             onChange={(e) => update({ description: e.target.value })} aria-invalid={!!errors.what} aria-describedby={errors.what ? 'what-err' : undefined} />
-          <VoiceRecorder value={voice} onChange={(m) => setKind('voice_description', m ? [m] : [])} />
+          {!voiceFirst && <VoiceRecorder value={voice} onChange={(m) => setKind('voice_description', m ? [m] : [])} />}
           {errors.what && <span id="what-err" className="error" role="alert">{errors.what}</span>}
         </div>
 
         <fieldset>
-          <legend className="label">{t('report.topic')} <span className="req">*</span></legend>
+          <legend className="label" style={{ width: '100%' }}><span className="label-row"><span><Bi k="report.topic" inline /> <span className="req">*</span></span><SpeakButton clip="topic" /></span></legend>
           <div className="chips">
             {CATEGORIES.map((c) => (
-              <button key={c} type="button" className="chip" aria-pressed={draft.category === c} onClick={() => update({ category: c })}>{t(`cat.${c}`)}</button>
+              <button key={c} type="button" className="chip" aria-pressed={draft.category === c} onClick={() => update({ category: c })}><Bi k={`cat.${c}`} /></button>
             ))}
           </div>
           {errors.topic && <p className="error" role="alert">{errors.topic}</p>}
         </fieldset>
 
         <fieldset style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          <legend className="label">{t('report.urgency')}</legend>
+          <legend className="label" style={{ width: '100%' }}><span className="label-row"><span>{t('report.urgency')}</span><SpeakButton clip="urgency" /></span></legend>
           <label className="choice"><input type="radio" name="urgency" checked={draft.urgency === 'normal'} onChange={() => update({ urgency: 'normal' })} />{t('report.normal')}</label>
           <label className="choice urgent"><input type="radio" name="urgency" checked={draft.urgency === 'urgent'} onChange={() => update({ urgency: 'urgent' })} />
             <span>{t('report.urgent')}<span className="sub">{t('report.urgentSub')}</span></span></label>
-          {draft.urgency === 'urgent' && (
-            <p role="alert" style={{ margin: 0, display: 'flex', gap: 10, padding: 12, background: 'var(--ink)', color: '#fff', borderRadius: 12, fontSize: 15 }}>
-              <span style={{ color: '#FFB4B7', flex: 'none' }}><Alert /></span>{t('report.emergency')}
-            </p>
-          )}
+          {draft.urgency === 'urgent' && <EmergencyPanel category={draft.category} />}
         </fieldset>
 
         <div className="field">
-          <span className="label">{t('report.where')}</span>
+          <div className="label-row"><span className="label"><Bi k="report.where" inline /></span><SpeakButton clip="where" /></div>
           <Link to="/report/location" className="row-link">
             <span className="icon-tile white"><Pin /></span>
             {locTitle ? (
@@ -152,7 +152,7 @@ export default function ReportPage() {
         )}
 
         <div className="field">
-          <span className="label">{t('report.photos')} <span className="opt">{t('report.optional')} · {t('report.upTo', { n: toNeDigits(5, lang) })}</span></span>
+          <span className="label"><Bi k="report.photos" inline /> <span className="opt">{t('report.optional')} · {t('report.upTo', { n: toNeDigits(5, lang) })}</span></span>
           <PhotoPicker items={photos} onChange={(m) => setKind('photo', m)} />
           <label className="check"><input type="checkbox" checked={draft.wantsVideoContact}
             onChange={(e) => update({ wantsVideoContact: e.target.checked, ...(e.target.checked ? { isAnonymous: false } : {}) })} />{t('report.video')}</label>
@@ -166,10 +166,10 @@ export default function ReportPage() {
         )}
 
         <fieldset>
-          <legend className="label">{t('report.identity')}</legend>
+          <legend className="label" style={{ width: '100%' }}><span className="label-row"><span>{t('report.identity')}</span><SpeakButton clip="identity" /></span></legend>
           <div className="grid-2">
-            <label className="choice"><input type="radio" name="id" checked={draft.isAnonymous} onChange={() => update({ isAnonymous: true, wantsVideoContact: false })} />{t('report.anon')}</label>
-            <label className="choice"><input type="radio" name="id" checked={!draft.isAnonymous} onChange={() => update({ isAnonymous: false })} />{t('report.withContact')}</label>
+            <label className="choice"><input type="radio" name="id" checked={draft.isAnonymous} onChange={() => update({ isAnonymous: true, wantsVideoContact: false })} /><Bi k="report.anon" /></label>
+            <label className="choice"><input type="radio" name="id" checked={!draft.isAnonymous} onChange={() => update({ isAnonymous: false })} /><Bi k="report.withContact" /></label>
           </div>
           {draft.isAnonymous ? (
             <p className="hint" style={{ margin: '8px 0 0' }}>{t('report.anonNote')}</p>
@@ -198,7 +198,7 @@ export default function ReportPage() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 'auto' }}>
           {Object.keys(errors).length > 0 && <p className="error" style={{ margin: 0 }}>{t('report.fixErrors')}</p>}
           {failed && <p className="error" role="alert" style={{ margin: 0 }}>{t('report.failed')}</p>}
-          <button type="submit" className="btn btn-primary btn-block" disabled={busy} style={{ minHeight: 56, fontSize: 18 }}>{busy ? t('report.submitting') : t('report.submit')}</button>
+          <button type="submit" className="btn btn-primary btn-block" disabled={busy} style={{ minHeight: 60, fontSize: 19 }}>{busy ? t('report.submitting') : <Bi k="report.submit" />}</button>
           <button type="button" className="link-btn" onClick={() => setParams(detailed ? {} : { mode: 'detailed' })}>{detailed ? t('report.toQuick') : t('report.addDetail')}</button>
         </div>
       </form>

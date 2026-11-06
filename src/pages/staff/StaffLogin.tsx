@@ -12,7 +12,7 @@ export default function StaffLogin() {
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (login(id, pw)) nav('/staff/inbox'); else setErr('Login ID or password is wrong, or the account is deactivated.');
+    if (login(id, pw)) nav('/staff/today'); else setErr('Login ID or password is wrong, or the account is deactivated.');
   }
 
   return (

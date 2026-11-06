@@ -90,6 +90,8 @@ export interface Report {
   infoRequests: InfoRequest[];
   publicInfo?: PublicInfo;
   audit: AuditEntry[];
+  /** What the citizen sees on the tracking page, with the date each step happened. */
+  citizenEvents?: { status: CitizenStatus; at: string }[];
   sample?: boolean;
 }
 

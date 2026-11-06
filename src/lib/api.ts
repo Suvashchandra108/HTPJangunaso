@@ -13,7 +13,7 @@ import type {
 import { citizenStatus } from './types';
 import { bsYear } from './bs';
 
-const KEY = 'htp-janagunaso-demo-v1';
+const KEY = 'htp-janagunaso-demo-v2';
 const SESSION = 'htp-janagunaso-staff-session';
 export const DEMO_PASSWORD = 'demo1234';
 
@@ -91,6 +91,7 @@ export async function submitReport(input: SubmitInput): Promise<{ referenceCode:
     priority: input.urgency === 'urgent' ? 'high' : 'normal', trackingTokenHash: await sha256(trackingToken),
     submittedAt: now(), location: input.location, contact: input.isAnonymous ? undefined : input.contact,
     media: input.media, assignments: [], notes: [], infoRequests: [], audit: [],
+    citizenEvents: [{ status: 'received', at: now() }],
   };
   audit(r, 'citizen', 'Report received from citizen');
   db.reports.unshift(r);
@@ -98,7 +99,13 @@ export async function submitReport(input: SubmitInput): Promise<{ referenceCode:
   return { referenceCode, trackingToken, submittedAt: r.submittedAt };
 }
 
-export interface TrackResult { referenceCode: string; status: ReturnType<typeof citizenStatus>; submittedAt: string; openRequest?: { id: string; message: string } }
+export interface TrackResult {
+  referenceCode: string; status: ReturnType<typeof citizenStatus>; submittedAt: string; category: CategorySlug;
+  events: { status: ReturnType<typeof citizenStatus>; at: string }[];
+  openRequest?: { id: string; message: string };
+  /** Only what the Admin Head approved for the public: never internal notes or staff names. */
+  published?: { title: string; storyUrl?: string };
+}
 
 /** POST /track. Reference alone opens nothing: the token must match. */
 export async function track(referenceCode: string, token: string): Promise<TrackResult | null> {
@@ -106,7 +113,12 @@ export async function track(referenceCode: string, token: string): Promise<Track
   const r = db.reports.find((x) => x.referenceCode === referenceCode.trim().toUpperCase());
   if (!r || r.trackingTokenHash !== (await sha256(token.trim()))) return null;
   const open = r.infoRequests.find((q) => !q.answeredAt);
-  return { referenceCode: r.referenceCode, status: citizenStatus(r.workflowState), submittedAt: r.submittedAt, openRequest: open && { id: open.id, message: open.message } };
+  const events = r.citizenEvents?.length ? r.citizenEvents : [{ status: 'received' as const, at: r.submittedAt }];
+  return {
+    referenceCode: r.referenceCode, status: citizenStatus(r.workflowState), submittedAt: r.submittedAt, category: r.category, events,
+    openRequest: open && { id: open.id, message: open.message },
+    published: r.visibility === 'public' && r.publicInfo ? { title: r.publicInfo.title, storyUrl: r.publicInfo.storyUrl } : undefined,
+  };
 }
 
 /** POST /add-info. Only while an info request is open. */
@@ -216,20 +228,23 @@ function mutate(u: StaffUser, id: string, fn: (r: Report, db: Db) => void) {
   const db = load();
   const r = db.reports.find((x) => x.id === id);
   if (!r || !canSee(r, u)) throw new Error('not_found');
+  const before = citizenStatus(r.workflowState);
   fn(r, db);
+  const after = citizenStatus(r.workflowState);
+  if (after !== before) (r.citizenEvents ??= []).push({ status: after, at: now() });
   save(db);
 }
 const need = (ok: boolean) => { if (!ok) throw new Error('forbidden'); };
 
 /** Allowed workflow moves (Phase 1 lifecycle). */
 export const TRANSITIONS: Record<WorkflowState, WorkflowState[]> = {
-  received: ['screening'],
+  received: ['screening', 'rejected', 'outside_scope'],
   screening: ['verification', 'insufficient_info', 'rejected', 'duplicate', 'outside_scope'],
   insufficient_info: ['screening', 'closed'],
   verification: ['assigned', 'rejected'],
   assigned: ['follow_up', 'editorial_decision'],
   follow_up: ['verification', 'editorial_decision'],
-  editorial_decision: ['closed'],
+  editorial_decision: ['closed', 'follow_up'],
   rejected: ['closed'], duplicate: ['closed'], outside_scope: ['closed'], closed: [],
 };
 
@@ -373,6 +388,11 @@ function seed(): Db {
       submittedAt: ago(minsAgo), location: loc, media: [], assignments: [], notes: [], infoRequests: [], audit: [], sample: true, ...p,
     };
     r.audit.push({ id: uid(), at: r.submittedAt, actor: 'citizen', action: 'Report received from citizen' });
+    const cs = citizenStatus(r.workflowState);
+    const later = (h: number) => new Date(new Date(r.submittedAt).getTime() + h * 3600000).toISOString();
+    r.citizenEvents = [{ status: 'received', at: r.submittedAt }];
+    if (cs !== 'received') r.citizenEvents.push({ status: 'under_review', at: later(3) });
+    if (cs === 'closed') { r.closedAt = later(26); r.citizenEvents.push({ status: 'closed', at: r.closedAt }); }
     return r;
   };
   const loc = (district: string, localLevel: string, ward?: number): ReportLocation =>
@@ -385,8 +405,8 @@ function seed(): Db {
       publicInfo: { title: 'स्वास्थ्य चौकीमा आधारभूत औषधि अभाव', summary: 'औषधि आपूर्ति ढिलो भएको स्वास्थ्य चौकीको जवाफ रिपोर्टसँगै राखिएको छ।', approvedBy: 'admin.head', approvedAt: ago(3 * 1440) } },
       7 * 1440, loc('saptari', 'saptari:bodebarsain-municipality', 2)),
     mk({ category: 'water', description: 'धारा बन्द, उही टोलबाट दोस्रो रिपोर्ट।', workflowState: 'duplicate' }, 4 * 1440 + 30, loc('siraha', 'siraha:dhangadhimai-municipality', 7)),
-    mk({ category: 'water', description: 'तीन हप्तादेखि टोलको धारामा पानी आएको छैन।', workflowState: 'verification', visibility: 'public',
-      assignments: [{ staffId: 's-sita', isLead: true, assignedBy: 's-head', assignedAt: ago(3 * 1440) }],
+    mk({ category: 'water', description: 'तीन हप्तादेखि टोलको धारामा पानी आएको छैन।', workflowState: 'assigned', visibility: 'public',
+      assignments: [{ staffId: 's-sita', isLead: true, assignedBy: 's-head', assignedAt: ago(3 * 1440), dueAt: ago(2 * 1440) }],
       publicInfo: { title: 'तीन हप्तादेखि धारामा पानी नआएको गुनासो', summary: 'एउटै टोलबाट धेरै रिपोर्ट आएका छन्। HTP खबरले सम्बन्धित निकायसँग कुरा गरिरहेको छ।', approvedBy: 'admin.head', approvedAt: ago(2 * 1440) } },
       4 * 1440, loc('siraha', 'siraha:dhangadhimai-municipality', 7)),
     mk({ category: 'road', description: 'लहान बजार नजिक मुख्य सडकमा ठूला खाल्डा छन्। हिजो राति मोटरसाइकल लडेर दुई जना घाइते भए।', workflowState: 'follow_up', priority: 'high', visibility: 'public',
@@ -397,7 +417,7 @@ function seed(): Db {
       ],
       publicInfo: { title: 'लहान बजार नजिक मुख्य सडकमा ठूला खाल्डा, दुर्घटनाको जोखिम', summary: 'नागरिकको रिपोर्टपछि HTP खबरले स्थलगत जाँच गर्‍यो। नगरपालिकाले मर्मत गर्ने बताएको छ।', storyUrl: 'https://htpkhabar.com/', approvedBy: 'admin.head', approvedAt: ago(1 * 1440) } },
       2 * 1440 + 60, { ...loc('siraha', 'siraha:lahan-municipality', 5), method: 'gps', accuracyM: 12, locality: 'बजार चोक' }),
-    mk({ category: 'education', description: 'हाम्रा गाउँक विद्यालयमे शिक्षक नियमित नहि अबैत छथि।', originalLanguage: 'mai', workflowState: 'received' }, 40, loc('siraha', 'siraha:mirchaiya-municipality', 3)),
+    mk({ category: 'education', description: 'हाम्रा गाउँक विद्यालयमे शिक्षक नियमित नहि अबैत छथि।', originalLanguage: 'mai', workflowState: 'received', isAnonymous: false, contact: { name: 'नमुना नागरिक', phone: '9800000000' } }, 40, loc('siraha', 'siraha:mirchaiya-municipality', 3)),
     mk({ category: 'disaster', description: 'खोलाले तटबन्ध काट्दैछ, रातिसम्म बस्तीमा पानी पस्ने खतरा छ।', urgency: 'urgent', priority: 'high', workflowState: 'received' }, 12, loc('saptari', 'saptari:rajbiraj-municipality', 1)),
   ];
   return { counters: { [year]: seq }, reports: reports.reverse(), staff };

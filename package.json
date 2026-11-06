@@ -2,7 +2,7 @@
   "name": "htp-janagunaso",
   "private": true,
   "version": "0.1.0",
-  "description": "HTP Janagunaso \u2014 citizen reporting and newsroom platform for HTP Khabar",
+  "description": "HTP Janagunaso — citizen reporting and newsroom platform for HTP Khabar",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -15,6 +15,7 @@
     "i18next": "^26.5.12",
     "leaflet": "^1.9.4",
     "nepali-date-converter": "^3.4.2",
+    "qrcode": "^1.5.4",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-i18next": "^17.1.9",
@@ -23,6 +24,7 @@
   },
   "devDependencies": {
     "@types/leaflet": "^1.9.20",
+    "@types/qrcode": "^1.5.6",
     "@types/react": "^18.3.27",
     "@types/react-dom": "^18.3.7",
     "@vitejs/plugin-react": "^4.7.0",

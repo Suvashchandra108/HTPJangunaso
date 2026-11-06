@@ -11,6 +11,8 @@ const PrivacyPage = lazy(() => import('./pages/PrivacyPage'));
 const StaffLogin = lazy(() => import('./pages/staff/StaffLogin'));
 const StaffShell = lazy(() => import('./pages/staff/StaffShell'));
 const Inbox = lazy(() => import('./pages/staff/Inbox'));
+const Today = lazy(() => import('./pages/staff/Today'));
+const Board = lazy(() => import('./pages/staff/Board'));
 const ReportDetail = lazy(() => import('./pages/staff/ReportDetail'));
 const Accounts = lazy(() => import('./pages/staff/Accounts'));
 
@@ -32,7 +34,10 @@ export default function App() {
           <Route path="/privacy" element={<PrivacyPage />} />
           <Route path="/staff" element={<StaffLogin />} />
           <Route path="/staff" element={<StaffShell />}>
-            <Route path="inbox" element={<Inbox />} />
+            <Route path="today" element={<Today />} />
+            <Route path="board" element={<Board />} />
+            <Route path="all" element={<Inbox />} />
+            <Route path="inbox" element={<Navigate to="/staff/today" replace />} />
             <Route path="report/:id" element={<ReportDetail />} />
             <Route path="accounts" element={<Accounts />} />
           </Route>

@@ -4,7 +4,7 @@ A mobile-first web app (PWA) where anyone in Nepal can report a public-interest
 issue to HTP Khabar in Nepali, English or Maithili, and where the newsroom
 screens, verifies, assigns and publishes those reports.
 
-**Status: Phase 3 demo.** All screens work, but data is stored only in the
+**Status: Phase 3 demo, round 2.** All screens work, but data is stored only in the
 browser that uses it (sample data included). Phase 4 connects the Supabase
 backend so reports reach the newsroom from any phone.
 
@@ -64,6 +64,21 @@ security in the database decides what anyone can read or write.
 - Staff accounts: created by Admin Head / Admin, temporary password changed at first sign-in, reset, deactivate
 - Installable PWA with an offline app shell
 
+### Added in round 2
+
+- **Simple words:** everyday Nepali with a small English word under key buttons (रिपोर्ट गर्नुहोस् / Report)
+- **Emergency:** "Is someone in danger?" opens one-tap calls to Police 100, plus Ambulance 102, Fire 101,
+  Disaster 1234, Women 1145, Child 1098 or CIAA 107 depending on the topic. The website cannot alert the
+  police by itself; it makes calling one tap.
+- **WhatsApp to HTP (+977 9851330200):** on the home page, after sending (with the report already typed in:
+  number, topic, what happened, place, map link) and on the tracking page
+- **Voice help:** speaker buttons appear once HTP records the clips in `docs/voice-script.md`
+- **Tracking:** "My reports" saved on the phone (no code to type), dated timeline, what happens next,
+  outcome with story link, QR code and "send to my WhatsApp" on the success screen
+- **Newsroom:** Today screen (urgent banner, late list, three lanes), Board with five columns,
+  one "next step" button per report, side-panel preview, plain status names, late/due badges,
+  Nepali/English switch, phone layout, call and WhatsApp buttons for citizens who shared a number
+
 ## Code map
 
 ```
@@ -78,7 +93,8 @@ src/
   locales/          ne.json, en.json, mai.json
   pages/            Citizen screens; pages/staff/ newsroom screens
   styles.css        HTP red design system (#E4010B from the logo)
-tests/e2e.py        23 end-to-end checks (Playwright)
+tests/e2e.py        38 end-to-end checks (Playwright)
+docs/voice-script.md  What to record for the speaker buttons
 ```
 
 ## Known limitations to resolve

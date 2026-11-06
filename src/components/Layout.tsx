@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -10,7 +11,10 @@ const logoSrc = 'https://htpkhabar.com/wp-content/uploads/2021/12/cropped-croppe
 
 export function Logo({ height = 34 }: { height?: number }) {
   const { t } = useTranslation();
-  return <img src={logoSrc} alt={t('app.logoAlt')} className="logo" style={{ height }} />;
+  const [failed, setFailed] = useState(false);
+  // If htpkhabar.com is slow or blocks the image, show a text wordmark instead of a broken image.
+  if (failed) return <span className="logo-text" style={{ fontSize: height * 0.62 }}><b>HTP</b> खबर</span>;
+  return <img src={logoSrc} alt={t('app.logoAlt')} className="logo" style={{ height }} onError={() => setFailed(true)} />;
 }
 
 export function LangSwitch() {
@@ -57,7 +61,7 @@ export function BottomNav() {
   return (
     <nav className="bottom-nav" aria-label={t('nav.home')}>
       {items.map(([to, label, icon]) => (
-        <NavLink key={to} to={to} end={to === '/'} className={({ isActive }) => (isActive ? 'active' : '')}>{icon}{label}</NavLink>
+        <NavLink key={to} to={to} end={to === '/'} className={({ isActive }) => (isActive ? 'active' : '')}>{icon}<span>{label}</span></NavLink>
       ))}
     </nav>
   );

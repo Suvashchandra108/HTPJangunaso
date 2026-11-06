@@ -1,9 +1,12 @@
 import { useMemo, useState } from 'react';
 import { createStaff, listStaff, resetPassword, setActive } from '../../lib/api';
 import type { StaffRole } from '../../lib/types';
-import { Modal, ROLE_LABEL, useStaff } from './StaffShell';
+import { useTranslation } from 'react-i18next';
+import { Modal, useStaff } from './ctx';
 
 export default function Accounts() {
+  const { t } = useTranslation();
+  const ROLE_LABEL = (r: StaffRole) => t(`staff.role.${r}`);
   const { user, version, refresh, toast } = useStaff();
   const staff = useMemo(() => listStaff(), [version]);
   const [creating, setCreating] = useState(false);
@@ -16,7 +19,7 @@ export default function Accounts() {
   return (
     <>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: 12 }}>
-        <div><h1>Staff accounts</h1><span className="small muted">No self-signup. {user.role === 'admin_head' ? 'You can create Admins, Reporters and Viewers.' : 'You can create Reporters and Viewers.'}</span></div>
+        <div><h1>{t('staff.nav.accounts')}</h1><span className="small muted">No self-signup. {user.role === 'admin_head' ? 'You can create Admins, Reporters and Viewers.' : 'You can create Reporters and Viewers.'}</span></div>
         <button className="sbtn primary" onClick={() => setCreating(true)}>+ New account</button>
       </div>
       <div className="table-wrap">
@@ -27,7 +30,7 @@ export default function Accounts() {
               <tr key={s.id}>
                 <td className="mono" style={{ fontWeight: 600 }}>{s.loginId}</td>
                 <td>{s.fullName}</td>
-                <td>{ROLE_LABEL[s.role]}</td>
+                <td>{ROLE_LABEL(s.role)}</td>
                 <td>{s.isActive ? <span className="state"><span className="dot" style={{ background: 'var(--green)' }} />Active{s.mustChangePassword ? ' · temp password' : ''}</span> : <span className="state muted"><span className="dot" style={{ background: 'var(--line-strong)' }} />Deactivated</span>}</td>
                 <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
                   {canManage(s.role) && s.id !== user.id && <>
@@ -58,13 +61,14 @@ export default function Accounts() {
 }
 
 function CreateModal({ roles, onClose, onCreate }: { roles: StaffRole[]; onClose: () => void; onCreate: (id: string, name: string, role: StaffRole) => void }) {
+  const { t } = useTranslation();
   const [id, setId] = useState(''); const [name, setName] = useState(''); const [role, setRole] = useState<StaffRole>('reporter');
   return (
     <Modal title="New staff account" onClose={onClose}>
       <label className="field small" style={{ fontWeight: 700 }}>Login ID<input className="input mono" value={id} onChange={(e) => setId(e.target.value)} placeholder="ram.reporter" autoCapitalize="none" spellCheck={false} /></label>
       <label className="field small" style={{ fontWeight: 700 }}>Full name<input className="input" value={name} onChange={(e) => setName(e.target.value)} /></label>
       <label className="field small" style={{ fontWeight: 700 }}>Role
-        <select className="select" value={role} onChange={(e) => setRole(e.target.value as StaffRole)}>{roles.map((r) => <option key={r} value={r}>{ROLE_LABEL[r]}</option>)}</select>
+        <select className="select" value={role} onChange={(e) => setRole(e.target.value as StaffRole)}>{roles.map((r) => <option key={r} value={r}>{t(`staff.role.${r}`)}</option>)}</select>
       </label>
       <div className="toolbar" style={{ justifyContent: 'flex-end' }}><button className="sbtn" onClick={onClose}>Cancel</button><button className="sbtn primary" disabled={!id.trim() || !name.trim()} onClick={() => onCreate(id, name, role)}>Create account</button></div>
     </Modal>
